@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WinGo 1M Predictor & Coin Timer Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { 
+            font-family: 'Inter', sans-serif; 
+            background: #0f172a; 
+            color: #f8fafc; 
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #authOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+        .auth-card {
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 420px;
+            padding: 28px;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .auth-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #38bdf8;
+            text-align: center;
+        }
+        .tab-row {
+            display: flex;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+            padding: 4px;
+            gap: 4px;
+        }
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            padding: 8px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: #334155;
+            color: #38bdf8;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-size: 12px;
+            color: #cbd5e1;
+        }
+        .form-control {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 10px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+        .form-control:focus {
+            border-color: #38bdf8;
+        }
+        .auth-btn {
+            background: #0284c7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+            margin-top: 6px;
+        }
+        .auth-btn:hover {
+            background: #0369a1;
+        }
+        .error-msg {
+            color: #ef4444;
+            font-size: 12px;
+            text-align: center;
+            min-height: 16px;
+        }
+
+        .top-left-hud {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 20;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+            max-width: 50vw;
+        }
+        .hud-pill {
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(6px);
+            border: 1px solid #475569;
+            padding: 6px 10px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .hud-pill:hover {
+            background: rgba(51, 65, 85, 0.95);
+        }
+
+        .top-right-hud {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 20;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            max-width: 50vw;
+        }
+        .admin-menu-btn {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .admin-menu-btn:hover { background: #6d28d9; }
+
+        .user-logout-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .user-logout-btn:hover { background: #b91c1c; }
+
+        .copy-id-btn {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .copy-id-btn:hover { background: #047857; }
+
+        .transfer-btn {
+            background: #d97706;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .transfer-btn:hover { background: #b45309; }
+
+        #adminModal, #transferModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .admin-box, .transfer-box {
+            background: #1e293b;
+            border: 1px solid #475569;
+            width: 95%;
+            max-width: 420px;
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        .admin-box { max-width: 750px; max-height: 90vh; }
+        .admin-nav-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 10px;
+        }
+        .admin-nav-tab {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .admin-nav-tab.active {
+            background: #7c3aed;
+            color: white;
+            border-color: #8b5cf6;
+        }
+        .admin-tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+        .admin-tab-content.active {
+            display: flex;
+        }
+        .admin-users-list {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 12px;
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .user-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #1e293b;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+        .user-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .mini-input {
+            width: 70px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: white;
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 11px;
+            text-align: center;
+        }
+        .mini-btn {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .mini-btn:hover { background: #0369a1; }
+
+        #shopModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .shop-box {
+            background: #1e293b;
+            border: 1px solid #475569;
+            width: 90%;
+            max-width: 380px;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            text-align: center;
+        }
+        .shop-package {
+            background: #0f172a;
+            border: 1px solid #334155;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #mainAppContent {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .game-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            z-index: 1;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            border: 1px solid #334155;
+        }
+        .game-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .floating-window {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            width: 320px;
+            max-width: 90vw;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: height 0.3s ease;
+        }
+
+        .window-header {
+            background: #334155;
+            padding: 10px 14px;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #475569;
+            user-select: none;
+        }
+        .window-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .control-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .control-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .window-body {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .floating-window.minimized .window-body {
+            display: none;
+        }
+
+        #predictorLockOverlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.92);
+            z-index: 15;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            gap: 10px;
+        }
+
+        .section-group { background: #334155; padding: 8px; border-radius: 8px; text-align: center; }
+        .big-group { border-left: 4px solid #f59e0b; }
+        .small-group { border-left: 4px solid #3b82f6; }
+
+        .group-title { font-size: 12px; font-weight: bold; margin-bottom: 4px; }
+        .big-title { color: #f59e0b; }
+        .small-title { color: #3b82f6; }
+
+        .btn-row { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; }
+        
+        button { 
+            font-size: 12px; 
+            border-radius: 4px; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold; 
+            color: white; 
+            transition: 0.1s; 
+        }
+        .main-btn { padding: 6px 10px; margin-bottom: 4px; width: 100%; }
+        .btn-big { background-color: #d97706; }
+        .btn-small { background-color: #2563eb; }
+        
+        .num-btn { 
+            width: 32px; 
+            height: 32px; 
+            font-size: 11px; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 50%; 
+        }
+        .num-btn.btn-big { background-color: #b45309; }
+        .num-btn.btn-small { background-color: #1d4ed8; }
+        button:active { transform: scale(0.95); opacity: 0.9; }
+
+        .predict-box { background: #0f172a; padding: 8px; border-radius: 6px; text-align: center; border: 1px solid #475569; }
+        .result-box { font-size: 18px; font-weight: bold; margin: 2px 0; }
+        .predict-reason { font-size: 10px; color: #94a3b8; }
+
+        .accuracy-banner { background: linear-gradient(135deg, #059669, #10b981); color: white; padding: 6px 8px; border-radius: 6px; font-weight: bold; font-size: 11px; display: flex; flex-direction: column; gap: 3px; }
+        .accuracy-bar-container { background: rgba(255,255,255,0.2); border-radius: 4px; height: 4px; width: 100%; overflow: hidden; }
+        .accuracy-bar { background: #fff; height: 100%; width: 0%; transition: width 0.4s ease; }
+
+        .stats-box {
+            display: flex;
+            justify-content: space-between;
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .history-section { display: flex; flex-direction: column; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .history-title { font-size: 11px; color: #cbd5e1; }
+        
+        .clear-btn { 
+            display: none; 
+            background: #dc2626; 
+            color: white; 
+            padding: 2px 8px; 
+            font-size: 10px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+
+        .history-list { 
+            background: #0f172a; 
+            border-radius: 6px; 
+            padding: 6px; 
+            max-height: 100px; 
+            overflow-y: auto; 
+            font-size: 11px; 
+            border: 1px solid #334155; 
+        }
+        .history-item { padding: 3px 0; border-bottom: 1px solid #1e293b; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+    <!-- Auth Page Overlay -->
+    <div id="authOverlay">
+        <div class="auth-card">
+            <div class="auth-title" id="customAuthTitle">WinGo Predictor & Timer Portal</div>
+            
+            <div class="tab-row">
+                <button class="tab-btn active" id="tabRegisterBtn" onclick="switchTab('register')">Register</button>
+                <button class="tab-btn" id="tabUserLoginBtn" onclick="switchTab('userLogin')">User Login</button>
+                <button class="tab-btn" id="tabAdminLoginBtn" onclick="switchTab('adminLogin')">Admin Login</button>
+            </div>
+
+            <div class="error-msg" id="authErrorMsg"></div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="form-group">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="regUsername" class="form-control" placeholder="အမည်ထည့်ပါ">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" class="form-control" placeholder="စကားဝှက်ထည့်ပါ">
+                </div>
+                <button class="auth-btn" onclick="handleRegister()">အကောင့်အသစ်ဖွင့်မည် (Register)</button>
+            </div>
+
+            <!-- User Login Form -->
+            <div id="userLoginForm" class="form-group" style="display: none;">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUsername" class="form-control" placeholder="အမည်ထည့်ပါ">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="စကားဝှက်ထည့်ပါ">
+                </div>
+                <button class="auth-btn" onclick="handleUserLogin()">အကောင့်ဝင်မည် (Login)</button>
+            </div>
+
+            <!-- Admin Login Form -->
+            <div id="adminLoginForm" class="form-group" style="display: none;">
+                <div class="form-group">
+                    <label>Admin Password</label>
+                    <input type="password" id="adminPasswordInput" class="form-control" autocomplete="new-password">
+                </div>
+                <button class="auth-btn" style="background: #7c3aed;" onclick="handleAdminLogin()">Admin ဝင်မည်</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="mainAppContent">
+        <!-- Top-Left Timer, Coin & Transfer HUD -->
+        <div class="top-left-hud">
+            <div class="hud-pill" onclick="openShopModal()" title="Coins & Time Shop">
+                🪙 <span id="userCoinDisplay">0</span>
+            </div>
+            <div class="hud-pill" onclick="openShopModal()" title="Active Access Timer" style="color: #38bdf8;">
+                ⏱️ <span id="userTimerDisplay">00:00:00</span>
+            </div>
+            <button class="transfer-btn" id="transferNavBtn" onclick="openTransferModal()">
+                💸 Transfer
+            </button>
+        </div>
+
+        <!-- Top-Right HUD (Logout, Admin Panel & Copy ID Button) -->
+        <div class="top-right-hud">
+            <button class="copy-id-btn" id="copyUserIdBtn" onclick="copyMyUserId()" title="Copy Your User ID">
+                📋 ID
+            </button>
+            <button class="admin-menu-btn" id="topRightAdminBtn" style="display: none;" onclick="openAdminModal()">
+                ⚙️ Admin
+            </button>
+            <button class="user-logout-btn" onclick="userLogout()" title="Logout">
+                🚪 Logout
+            </button>
+        </div>
+
+        <!-- Game Website Container -->
+        <div class="game-container">
+            <iframe src="https://777bigwingame.vip/#/"></iframe>
+        </div>
+
+        <!-- Floating Predictor Window -->
+        <div class="floating-window" id="floatingWindow">
+            <div id="predictorLockOverlay">
+                <div style="font-size: 28px;">🔒</div>
+                <div style="font-weight: bold; color: #38bdf8; font-size: 14px;">Predictor Locked</div>
+                <div style="font-size: 11px; color: #94a3b8;" id="lockMessage">အချိန်ကုန်သွားပါပြီ သို့မဟုတ် အချိန်မဝယ်ရသေးပါ။ Time ဝယ်ယူပါ။</div>
+                <button class="auth-btn" style="padding: 6px 14px; font-size: 12px; margin-top: 4px;" onclick="openShopModal()">⏱️ အချိန်ဝယ်ရန် (Buy Time)</button>
+            </div>
+
+            <div class="window-header" id="windowHeader">
+                <span class="window-title">🎯 WinGo Predictor</span>
+                <div class="window-controls">
+                    <button class="control-btn" onclick="toggleMinimize()" id="minBtn">-</button>
+                </div>
+            </div>
+
+            <div class="window-body">
+                <div>
+                    <!-- BIG Group (5-9) -->
+                    <div class="section-group big-group">
+                        <div class="group-title big-title">BIG (5 - 9)</div>
+                        <button class="main-btn btn-big" onclick="saveResult('BIG', null)">BIG သို့သိမ်းမည်</button>
+                        <div class="btn-row">
+                            <button class="num-btn btn-big" onclick="saveResult('BIG', 5)">5</button>
+                            <button class="num-btn btn-big" onclick="saveResult('BIG', 6)">6</button>
+                            <button class="num-btn btn-big" onclick="saveResult('BIG', 7)">7</button>
+                            <button class="num-btn btn-big" onclick="saveResult('BIG', 8)">8</button>
+                            <button class="num-btn btn-big" onclick="saveResult('BIG', 9)">9</button>
+                        </div>
+                    </div>
+
+                    <!-- SMALL Group (0-4) -->
+                    <div class="section-group small-group" style="margin-top: 6px;">
+                        <div class="group-title small-title">SMALL (0 - 4)</div>
+                        <button class="main-btn btn-small" onclick="saveResult('SMALL', null)">SMALL သို့သိမ်းမည်</button>
+                        <div class="btn-row">
+                            <button class="num-btn btn-small" onclick="saveResult('SMALL', 0)">0</button>
+                            <button class="num-btn btn-small" onclick="saveResult('SMALL', 1)">1</button>
+                            <button class="num-btn btn-small" onclick="saveResult('SMALL', 2)">2</button>
+                            <button class="num-btn btn-small" onclick="saveResult('SMALL', 3)">3</button>
+                            <button class="num-btn btn-small" onclick="saveResult('SMALL', 4)">4</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI / Logic Prediction Section -->
+                <div class="predict-box">
+                    <div style="font-size: 10px; color: #94a3b8;">ခန့်မှန်းချက် (Prediction)</div>
+                    <div class="result-box" id="predictionDisplay">--</div>
+                    <div class="predict-reason" id="predictionReason">ဒေတာများကို စောင့်ဆိုင်းနေသည်...</div>
+                </div>
+
+                <!-- Win & Lose Statistics Display System -->
+                <div class="stats-box">
+                    <span style="color: #4ade80;">Win: <span id="winCountDisplay">0</span></span>
+                    <span style="color: #f87171;">Lose: <span id="loseCountDisplay">0</span></span>
+                    <span style="color: #38bdf8;">Win Rate: <span id="winRateDisplay">0%</span></span>
+                </div>
+
+                <!-- Accuracy Banner -->
+                <div class="accuracy-banner" id="accuracyBanner">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>မှန်ကန်နိုင်ခြေ (Accuracy)</span>
+                        <span id="accuracyText">--%</span>
+                    </div>
+                    <div class="accuracy-bar-container">
+                        <div class="accuracy-bar" id="accuracyBar"></div>
+                    </div>
+                </div>
+
+                <!-- History Section -->
+                <div class="history-section">
+                    <div class="history-header">
+                        <span class="history-title">မှတ်တမ်းများ</span>
+                        <button class="clear-btn" id="historyClearBtn" onclick="clearAllHistory()">ဖျက်ရန်</button>
+                    </div>
+                    <div class="history-list" id="historyList">ဒေတာ မရှိသေးပါ</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coin Transfer Modal -->
+    <div id="transferModal">
+        <div class="transfer-box">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: #38bdf8; font-size: 16px;">💸 Transfer Coins</h3>
+                <button class="control-btn" onclick="closeTransferModal()">✕</button>
+            </div>
+            <div style="font-size: 12px; color: #94a3b8;">လက်ခံမည့်သူ၏ Firebase User ID ကို ထည့်သွင်း၍ Coin လွှဲပြောင်းပါ။</div>
+            
+            <div class="form-group">
+                <label>Receiver User ID</label>
+                <input type="text" id="transferTargetId" class="form-control" placeholder="လက်ခံမည့်သူ၏ ID ထည့်ပါ">
+            </div>
+            
+            <div class="form-group">
+                <label>Amount (Coins)</label>
+                <input type="number" id="transferAmount" class="form-control" placeholder="လွှဲမည့် ပမာဏထည့်ပါ" min="1">
+            </div>
+
+            <button class="auth-btn" style="background: #d97706;" onclick="executeCoinTransfer()">🪙 Coin လွှဲမည်</button>
+            <button class="auth-btn" style="background: #334155; margin-top: 0;" onclick="closeTransferModal()">ပိတ်မည်</button>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div id="adminModal">
+        <div class="admin-box">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: #38bdf8; font-size: 16px;">⚙️ Admin Control Panel & Management</h3>
+                <button class="control-btn" onclick="closeAdminModal()">✕</button>
+            </div>
+
+            <div class="admin-nav-tabs">
+                <button class="admin-nav-tab active" onclick="switchAdminTab('usersTab', this)">👥 Registration List</button>
+                <button class="admin-nav-tab" onclick="switchAdminTab('topupTab', this)">🪙 Coin & Time Top-up</button>
+                <button class="admin-nav-tab" onclick="switchAdminTab('customizeTab', this)">🎨 Auth UI Customizer</button>
+            </div>
+
+            <div id="usersTab" class="admin-tab-content active">
+                <div style="font-size: 12px; color: #94a3b8;">စာရင်းသွင်းထားသူများ:</div>
+                <div class="admin-users-list" id="adminUsersList">ဒေတာ ရယူနေသည်...</div>
+            </div>
+
+            <div id="topupTab" class="admin-tab-content">
+                <div style="font-size: 12px; color: #94a3b8;">Coin / Time ဖြည့်ပေးနိုင်သော စနစ်:</div>
+                <div class="form-group">
+                    <label>Target Firebase User ID</label>
+                    <input type="text" id="targetFirebaseId" class="form-control" placeholder="User Document ID ထည့်ပါ">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Add Coins</label>
+                        <input type="number" id="topupCoinVal" class="form-control" value="10">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Add Time (Seconds)</label>
+                        <input type="number" id="topupTimeVal" class="form-control" value="3600">
+                    </div>
+                </div>
+                <button class="auth-btn" style="background: #0284c7;" onclick="adminDirectTopup()">Direct Top-Up ဖြည့်မည်</button>
+            </div>
+
+            <div id="customizeTab" class="admin-tab-content">
+                <div style="font-size: 12px; color: #94a3b8;">Auth Page ၏ စာသားများနှင့် Background Image ကို ပြင်ဆင်ရန်:</div>
+                <div class="form-group">
+                    <label>Auth Title Text</label>
+                    <input type="text" id="customTitleInput" class="form-control" value="WinGo Predictor & Timer Portal">
+                </div>
+                <div class="form-group">
+                    <label>Background Image URL</label>
+                    <input type="text" id="customBgInput" class="form-control" value="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1920&auto=format&fit=crop">
+                </div>
+                <button class="auth-btn" style="background: #10b981;" onclick="applyAuthCustomization()">ပြောင်းလဲမှုများကို သိမ်းဆည်းမည်</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; border-top: 1px solid #334155; padding-top: 12px; margin-top: auto;">
+                <button class="auth-btn" style="background: #dc2626; margin-top: 0; padding: 8px 16px;" onclick="adminLogout()">🚪 Admin Logout</button>
+                <button class="auth-btn" style="background: #334155; margin-top: 0; padding: 8px 16px;" onclick="closeAdminModal()">ပိတ်မည်</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time Shop Modal -->
+    <div id="shopModal">
+        <div class="shop-box">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: #38bdf8; font-size: 15px;">⏱️ Predictor Time Shop</h3>
+                <button class="control-btn" onclick="closeShopModal()">✕</button>
+            </div>
+            <div style="font-size: 12px; color: #cbd5e1;">သင့်လက်ကျန် Coin ဖြင့် အချိန်ဝယ်ယူပါ</div>
+            
+            <div class="shop-package">
+                <div style="text-align: left;">
+                    <div style="font-weight: bold; font-size: 13px;">1 နာရီ (1 Hour)</div>
+                    <div style="font-size: 11px; color: #94a3b8;">ကုန်ကျငွေ: 10 Coins</div>
+                </div>
+                <button class="mini-btn" style="padding: 6px 12px;" onclick="buyTime(3600, 10)">ဝယ်မည်</button>
+            </div>
+
+            <div class="shop-package">
+                <div style="text-align: left;">
+                    <div style="font-weight: bold; font-size: 13px;">1 ရက် (24 Hours)</div>
+                    <div style="font-size: 11px; color: #94a3b8;">ကုန်ကျငွေ: 100 Coins</div>
+                </div>
+                <button class="mini-btn" style="padding: 6px 12px;" onclick="buyTime(86400, 100)">ဝယ်မည်</button>
+            </div>
+
+            <button class="auth-btn" style="background: #334155;" onclick="closeShopModal()">ပိတ်မည်</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Scripts & Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, setDoc, query, orderBy, limit, onSnapshot, where, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA0jKVN0SIECp7t49bFSHSZ5UQXxE3ejnU",
+            authDomain: "mytest-fcc8b.firebaseapp.com",
+            projectId: "mytest-fcc8b",
+            storageBucket: "mytest-fcc8b.firebasestorage.app",
+            messagingSenderId: "971388156273",
+            appId: "1:971388156273:web:a03af16ddd306be29c5ed0",
+            measurementId: "G-0DB09BWGE6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentUserDocId = null;
+        let currentUserData = null;
+        let timerInterval = null;
+        let isAdminUser = false;
+
+        function getDeviceID() {
+            let devId = localStorage.getItem('wingo_device_id');
+            if (!devId) {
+                devId = 'dev_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+                localStorage.setItem('wingo_device_id', devId);
+            }
+            return devId;
+        }
+
+        function initAuthSettingsSync() {
+            onSnapshot(doc(db, "settings", "auth_config"), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.title) {
+                        document.getElementById('customAuthTitle').innerText = data.title;
+                        const titleInput = document.getElementById('customTitleInput');
+                        if (titleInput) titleInput.value = data.title;
+                    }
+                    if (data.bgUrl) {
+                        document.getElementById('authOverlay').style.background = `url('${data.bgUrl}') center/cover no-repeat`;
+                        const bgInput = document.getElementById('customBgInput');
+                        if (bgInput) bgInput.value = data.bgUrl;
+                    }
+                }
+            });
+        }
+        initAuthSettingsSync();
+
+        window.switchTab = function(tabName) {
+            document.getElementById('registerForm').style.display = tabName === 'register' ? 'flex' : 'none';
+            document.getElementById('userLoginForm').style.display = tabName === 'userLogin' ? 'flex' : 'none';
+            document.getElementById('adminLoginForm').style.display = tabName === 'adminLogin' ? 'flex' : 'none';
+            
+            document.getElementById('tabRegisterBtn').classList.toggle('active', tabName === 'register');
+            document.getElementById('tabUserLoginBtn').classList.toggle('active', tabName === 'userLogin');
+            document.getElementById('tabAdminLoginBtn').classList.toggle('active', tabName === 'adminLogin');
+            
+            document.getElementById('authErrorMsg').innerText = '';
+        };
+
+        window.switchAdminTab = function(tabId, btnEl) {
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.admin-nav-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btnEl.classList.add('active');
+        };
+
+        window.handleRegister = async function() {
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+            const errorEl = document.getElementById('authErrorMsg');
+
+            if (!username || !password) {
+                errorEl.innerText = 'ကျေးဇူးပြု၍ အချက်အလက်အားလုံး ဖြည့်ပါ။';
+                return;
+            }
+
+            const deviceId = getDeviceID();
+
+            try {
+                const deviceQuery = query(collection(db, "users"), where("deviceId", "==", deviceId));
+                const deviceSnapshot = await getDocs(deviceQuery);
+
+                if (!deviceSnapshot.empty) {
+                    errorEl.innerText = 'ဤ Device ဖြင့် အကောင့် ၁ ခုသာ အသစ်ဖွင့်နိုင်ခွင့်ရှိပါသည်။';
+                    return;
+                }
+
+                const userQuery = query(collection(db, "users"), where("username", "==", username));
+                const userSnapshot = await getDocs(userQuery);
+
+                if (!userSnapshot.empty) {
+                    errorEl.innerText = 'ဤ Username မှာ အသုံးပြုပြီးသား ဖြစ်နေပါသည်။';
+                    return;
+                }
+
+                // Register and get the newly created document reference
+                const docRef = await addDoc(collection(db, "users"), {
+                    username: username,
+                    password: password,
+                    deviceId: deviceId,
+                    coins: 10,
+                    timeExpiry: 0,
+                    registeredAt: new Date().toISOString()
+                });
+
+                // Automatically set session ID so the user can copy ID or log in seamlessly
+                currentUserDocId = docRef.id;
+
+                alert('အကောင့်ဖွင့်ခြင်း အောင်မြင်ပါသည်။ New user အတွက် 10 Coins လက်ဆောင်ရရှိပါသည်။');
+                window.switchTab('userLogin');
+                document.getElementById('loginUsername').value = username;
+            } catch (e) {
+                console.error("Error registering user: ", e);
+                errorEl.innerText = 'ချိတ်ဆက်မှု အမှားအယွင်း ရှိနေပါ။ ထပ်မံကြိုးစားပါ။';
+            }
+        };
+
+        window.handleUserLogin = async function() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const errorEl = document.getElementById('authErrorMsg');
+
+            if (!username || !password) {
+                errorEl.innerText = 'ကျေးဇူးပြု၍ Username နှင့် Password ထည့်ပါ။';
+                return;
+            }
+
+            try {
+                const userQuery = query(collection(db, "users"), where("username", "==", username));
+                const userSnapshot = await getDocs(userQuery);
+
+                if (userSnapshot.empty) {
+                    errorEl.innerText = 'ဤ Username မရှိပါ။';
+                    return;
+                }
+
+                let foundUserDoc = null;
+                userSnapshot.forEach((d) => {
+                    if (d.data().password === password) {
+                        foundUserDoc = { id: d.id, ...d.data() };
+                    }
+                });
+
+                if (foundUserDoc) {
+                    currentUserDocId = foundUserDoc.id;
+                    isAdminUser = false;
+                    enterApp(false);
+                } else {
+                    errorEl.innerText = 'စကားဝှက် (Password) မှားယွင်းနေပါသည်။';
+                }
+            } catch (e) {
+                console.error("Login error:", e);
+                errorEl.innerText = 'လော့ဂ်အင်ဝင်ရာတွင် အမှားအယွင်းရှိသည်။';
+            }
+        };
+
+        window.handleAdminLogin = function() {
+            const pass = document.getElementById('adminPasswordInput').value;
+            const errorEl = document.getElementById('authErrorMsg');
+
+            if (pass === 'iamo') {
+                currentUserDocId = 'ADMIN_SESSION';
+                isAdminUser = true;
+                enterApp(true);
+            } else {
+                errorEl.innerText = 'Admin password မှားယွင်းနေပါသည်။';
+            }
+        };
+
+        window.userLogout = function() {
+            currentUserDocId = null;
+            currentUserData = null;
+            isAdminUser = false;
+            if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('adminModal').style.display = 'none';
+            document.getElementById('transferModal').style.display = 'none';
+            document.getElementById('mainAppContent').style.display = 'none';
+            document.getElementById('topRightAdminBtn').style.display = 'none';
+            document.getElementById('copyUserIdBtn').style.display = 'none';
+            document.getElementById('transferNavBtn').style.display = 'none';
+            document.getElementById('historyClearBtn').style.display = 'none';
+            document.getElementById('authOverlay').style.display = 'flex';
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('adminPasswordInput').value = '';
+        };
+
+        window.adminLogout = function() {
+            window.userLogout();
+        };
+
+        function enterApp(isAdmin) {
+            document.getElementById('authOverlay').style.display = 'none';
+            document.getElementById('mainAppContent').style.display = 'block';
+
+            if (isAdmin) {
+                document.getElementById('topRightAdminBtn').style.display = 'block';
+                document.getElementById('copyUserIdBtn').style.display = 'none';
+                document.getElementById('transferNavBtn').style.display = 'none';
+                document.getElementById('historyClearBtn').style.display = 'block';
+                unlockPredictorWindow();
+                document.getElementById('userCoinDisplay').innerText = '9999';
+                document.getElementById('userTimerDisplay').innerText = 'ADMIN';
+            } else {
+                document.getElementById('topRightAdminBtn').style.display = 'none';
+                document.getElementById('copyUserIdBtn').style.display = 'flex';
+                document.getElementById('transferNavBtn').style.display = 'flex';
+                document.getElementById('historyClearBtn').style.display = 'none';
+                startUserSessionSync();
+            }
+        }
+
+        // Robust Copy ID function supporting modern and fallback clipboard methods
+        window.copyMyUserId = function() {
+            if (!currentUserDocId) {
+                alert('User ID မရှိသေးပါ။ ကျေးဇူးပြု၍ ပြန်လည် ဝင်ရောက်ပါ။');
+                return;
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentUserDocId).then(() => {
+                    alert('သင့် Coin လက်ခံမည့် User ID ကို Copy ကူးပြီးပါပြီ:\n' + currentUserDocId);
+                }).catch(err => {
+                    console.error('Clipboard API error:', err);
+                    fallbackCopyText(currentUserDocId);
+                });
+            } else {
+                fallbackCopyText(currentUserDocId);
+            }
+        };
+
+        function fallbackCopyText(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";  // Avoid scrolling to bottom
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    alert('သင့် Coin လက်ခံမည့် User ID ကို Copy ကူးပြီးပါပြီ:\n' + text);
+                } else {
+                    alert('ID ကူးယူ၍မရပါ။ Manual ဖြင့် မှတ်သားပါ။ ID: ' + text);
+                }
+            } catch (err) {
+                console.error('Fallback copy error:', err);
+                alert('ID ကူးယူ၍မရပါ။ ID: ' + text);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        window.openTransferModal = function() {
+            if (currentUserDocId === 'ADMIN_SESSION') {
+                alert('Admin အနေဖြင့် Transfer ပြုလုပ်၍ မရပါ။');
+                return;
+            }
+            document.getElementById('transferTargetId').value = '';
+            document.getElementById('transferAmount').value = '';
+            document.getElementById('transferModal').style.display = 'flex';
+        };
+
+        window.closeTransferModal = function() {
+            document.getElementById('transferModal').style.display = 'none';
+        };
+
+        window.executeCoinTransfer = async function() {
+            const receiverId = document.getElementById('transferTargetId').value.trim();
+            const amount = parseInt(document.getElementById('transferAmount').value) || 0;
+
+            if (!receiverId || amount <= 0) {
+                alert('ကျေးဇူးပြု၍ မှန်ကန်သော User ID နှင့် Coin ပမာဏကို ထည့်ပါ။');
+                return;
+            }
+
+            if (receiverId === currentUserDocId) {
+                alert('မိမိကိုယ်တိုင်သို့ Coin လွှဲပြောင်း၍ မရပါ။');
+                return;
+            }
+
+            if (!currentUserData || (currentUserData.coins || 0) < amount) {
+                alert('သင့်လက်ကျန် Main Balance Coins မလုံလောက်ပါ။');
+                return;
+            }
+
+            try {
+                const receiverRef = doc(db, "users", receiverId);
+                const receiverSnap = await getDoc(receiverRef);
+
+                if (!receiverSnap.exists()) {
+                    alert('ဤ User ID ဖြင့် အသုံးပြုသူ ရှာမတွေ့ပါ။');
+                    return;
+                }
+
+                const senderRef = doc(db, "users", currentUserDocId);
+                const currentSenderCoins = currentUserData.coins || 0;
+                const receiverCurrentCoins = receiverSnap.data().coins || 0;
+
+                await updateDoc(senderRef, {
+                    coins: currentSenderCoins - amount
+                });
+
+                await updateDoc(receiverRef, {
+                    coins: receiverCurrentCoins + amount
+                });
+
+                alert(`Coin ${amount} လွှဲပြောင်းခြင်း အောင်မြင်ပါသည်။`);
+                closeTransferModal();
+            } catch (e) {
+                console.error("Transfer error: ", e);
+                alert('လွှဲပြောင်းရာတွင် အမှားအယွင်းရှိသည်။');
+            }
+        };
+
+        function startUserSessionSync() {
+            if (!currentUserDocId) return;
+
+            onSnapshot(doc(db, "users", currentUserDocId), (docSnap) => {
+                if (docSnap.exists()) {
+                    currentUserData = docSnap.data();
+                    document.getElementById('userCoinDisplay').innerText = currentUserData.coins || 0;
+                    checkAndUpdateTimer(currentUserData.timeExpiry || 0);
+                }
+            });
+
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (currentUserData) {
+                    checkAndUpdateTimer(currentUserData.timeExpiry || 0);
+                }
+            }, 1000);
+        }
+
+        function checkAndUpdateTimer(expiryTimestamp) {
+            const now = Date.now();
+            const diff = Math.floor((expiryTimestamp - now) / 1000);
+
+            if (diff > 0) {
+                unlockPredictorWindow();
+                const hours = String(Math.floor(diff / 3600)).padStart(2, '0');
+                const minutes = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+                const seconds = String(diff % 60).padStart(2, '0');
+                document.getElementById('userTimerDisplay').innerText = `${hours}:${minutes}:${seconds}`;
+            } else {
+                lockPredictorWindow();
+                document.getElementById('userTimerDisplay').innerText = "00:00:00";
+            }
+        }
+
+        function unlockPredictorWindow() {
+            document.getElementById('predictorLockOverlay').style.display = 'none';
+        }
+
+        function lockPredictorWindow() {
+            document.getElementById('predictorLockOverlay').style.display = 'flex';
+        }
+
+        window.openShopModal = function() {
+            document.getElementById('shopModal').style.display = 'flex';
+        };
+
+        window.closeShopModal = function() {
+            document.getElementById('shopModal').style.display = 'none';
+        };
+
+        window.buyTime = async function(secondsToAdd, coinCost) {
+            if (currentUserDocId === 'ADMIN_SESSION') {
+                alert('Admin သည် အချိန်ဝယ်ယူရန် မလိုအပ်ပါ။');
+                window.closeShopModal();
+                return;
+            }
+
+            if (!currentUserData) return;
+
+            const currentCoins = currentUserData.coins || 0;
+            if (currentCoins < coinCost) {
+                alert('Coins မလုံလောက်ပါ။ Admin ထံတွင် Coins ထပ်မံဖြည့်ခိုင်းပါ။');
+                return;
+            }
+
+            const currentExpiry = currentUserData.timeExpiry || 0;
+            const now = Date.now();
+            const baseTime = currentExpiry > now ? currentExpiry : now;
+            const newExpiry = baseTime + (secondsToAdd * 1000);
+            const newCoins = currentCoins - coinCost;
+
+            try {
+                await updateDoc(doc(db, "users", currentUserDocId), {
+                    coins: newCoins,
+                    timeExpiry: newExpiry
+                });
+                alert('အချိန်ဝယ်ယူခြင်း အောင်မြင်ပါသည်။ Predictor ပွင့်သွားပါပြီ။');
+                window.closeShopModal();
+            } catch (e) {
+                console.error("Error buying time:", e);
+                alert('ဝယ်ယူရာတွင် အမှားအယွင်းရှိသည်။');
+            }
+        };
+
+        window.openAdminModal = async function() {
+            document.getElementById('adminModal').style.display = 'flex';
+            const listEl = document.getElementById('adminUsersList');
+            listEl.innerHTML = 'ဒေတာ ရယူနေသည်...';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                let html = '';
+                querySnapshot.forEach((userDoc) => {
+                    let u = userDoc.data();
+                    let uid = userDoc.id;
+                    let expiryDate = u.timeExpiry && u.timeExpiry > Date.now() ? new Date(u.timeExpiry).toLocaleTimeString() : 'Expired/None';
+                    
+                    html += `
+                        <div class="user-row">
+                            <div style="cursor: pointer;" onclick="document.getElementById('targetFirebaseId').value='${uid}'; switchAdminTab('topupTab', document.querySelectorAll('.admin-nav-tab')[1]);" title="Click to fill Top-up ID">
+                                <div style="font-weight: bold; color: #38bdf8;">👤 ${u.username}</div>
+                                <div style="font-size: 10px; color: #94a3b8;">ID: <span style="color:#f59e0b">${uid}</span> | Coins: ${u.coins || 0} | Time: ${expiryDate}</div>
+                            </div>
+                            <div class="user-actions">
+                                <input type="number" id="input_coin_${uid}" class="mini-input" placeholder="Coins" value="10">
+                                <button class="mini-btn" onclick="adminAddCoins('${uid}')">+Coin</button>
+                                <input type="number" id="input_time_${uid}" class="mini-input" placeholder="Sec" value="3600">
+                                <button class="mini-btn" style="background:#7c3aed" onclick="adminAddTime('${uid}')">+Time</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                listEl.innerHTML = html || 'မှတ်ပုံတင်ထားသော အသုံးပြုသူ မရှိသေးပါ။';
+            } catch (e) {
+                listEl.innerHTML = 'ဒေတာဆွဲထုတ်ရာတွင် အမှားရှိသည်။';
+            }
+        };
+
+        window.closeAdminModal = function() {
+            document.getElementById('adminModal').style.display = 'none';
+        };
+
+        window.adminAddCoins = async function(userId) {
+            const val = parseInt(document.getElementById(`input_coin_${userId}`).value) || 0;
+            try {
+                const userRef = doc(db, "users", userId);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    let currentCoins = userSnap.data().coins || 0;
+                    await updateDoc(userRef, { coins: currentCoins + val });
+                    alert('Coin ဖြည့်သွင်းခြင်း အောင်မြင်ပါသည်။');
+                    window.openAdminModal();
+                }
+            } catch (e) {
+                console.error("Error adding coins:", e);
+                alert('အမှားအယွင်းရှိသည်။');
+            }
+        };
+
+        window.adminAddTime = async function(userId) {
+            const seconds = parseInt(document.getElementById(`input_time_${userId}`).value) || 0;
+            try {
+                const userRef = doc(db, "users", userId);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    let currentExpiry = userSnap.data().timeExpiry || 0;
+                    let now = Date.now();
+                    let base = currentExpiry > now ? currentExpiry : now;
+                    let newExpiry = base + (seconds * 1000);
+                    await updateDoc(userRef, { timeExpiry: newExpiry });
+                    alert('Time ဖြည့်သွင်းခြင်း အောင်မြင်ပါသည်။');
+                    window.openAdminModal();
+                }
+            } catch (e) {
+                console.error("Error adding time:", e);
+                alert('အမှားအယွင်းရှိသည်။');
+            }
+        };
+
+        window.adminDirectTopup = async function() {
+            const targetId = document.getElementById('targetFirebaseId').value.trim();
+            const coinsToAdd = parseInt(document.getElementById('topupCoinVal').value) || 0;
+            const timeToAddSec = parseInt(document.getElementById('topupTimeVal').value) || 0;
+
+            if (!targetId) {
+                alert('ကျေးဇူးပြု၍ Firebase User ID ထည့်ပါ။');
+                return;
+            }
+
+            try {
+                const userRef = doc(db, "users", targetId);
+                const userSnap = await getDoc(userRef);
+                if (!userSnap.exists()) {
+                    alert('ဤ Firebase ID ဖြင့် အသုံးပြုသူ ရှာမတွေ့ပါ။');
+                    return;
+                }
+
+                let userData = userSnap.data();
+                let currentCoins = userData.coins || 0;
+                let currentExpiry = userData.timeExpiry || 0;
+                let now = Date.now();
+                let base = currentExpiry > now ? currentExpiry : now;
+                let newExpiry = timeToAddSec > 0 ? base + (timeToAddSec * 1000) : currentExpiry;
+
+                await updateDoc(userRef, {
+                    coins: currentCoins + coinsToAdd,
+                    timeExpiry: newExpiry
+                });
+
+                alert('Firebase ID မှတဆင့် Coin နှင့် Time ဖြည့်သွင်းခြင်း အောင်မြင်ပါသည်။');
+                document.getElementById('targetFirebaseId').value = '';
+                window.openAdminModal();
+            } catch (e) {
+                console.error("Direct topup error:", e);
+                alert('တိုက်ရိုက် Top-up ပြုလုပ်ရာတွင် အမှားအယွင်းရှိသည်။');
+            }
+        };
+
+        window.applyAuthCustomization = async function() {
+            const titleText = document.getElementById('customTitleInput').value.trim();
+            const bgUrl = document.getElementById('customBgInput').value.trim();
+
+            try {
+                await setDoc(doc(db, "settings", "auth_config"), {
+                    title: titleText || "WinGo Predictor & Timer Portal",
+                    bgUrl: bgUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1920&auto=format&fit=crop"
+                }, { merge: true });
+
+                alert('Auth Page စာသားနှင့် Background ပြောင်းလဲမှုများကို Firebase တွင် အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။');
+            } catch (e) {
+                console.error("Error saving auth customization to Firebase:", e);
+                alert('သိမ်းဆည်းရာတွင် အမှားအယွင်းရှိသည်။');
+            }
+        };
+
+        window.saveResult = async function(type, number) {
+            try {
+                const numVal = number !== null ? number : "N/A";
+                const uniqueDocId = `res_${type}_${numVal}_${Date.now()}`;
+                
+                await setDoc(doc(db, "game_history", uniqueDocId), {
+                    result: type,
+                    number: numVal,
+                    timestamp: new Date()
+                });
+            } catch (e) {
+                console.error("Error saving unique result: ", e);
+            }
+        };
+
+        window.clearAllHistory = async function() {
+            if(confirm("သိမ်းဆည်းထားသော မှတ်တမ်းအားလုံးကို ဖျက်ရန် သေချာပါသလား?")) {
+                try {
+                    const querySnapshot = await getDocs(collection(db, "game_history"));
+                    let deletePromises = [];
+                    querySnapshot.forEach((document) => {
+                        deletePromises.push(deleteDoc(doc(db, "game_history", document.id)));
+                    });
+                    await Promise.all(deletePromises);
+                    alert("မှတ်တမ်းများအားလုံး ဖျက်ပြီးပါပြီ။");
+                } catch (e) {
+                    console.error("Error deleting documents: ", e);
+                }
+            }
+        };
+
+        const q = query(collection(db, "game_history"), orderBy("timestamp", "desc"), limit(30));
+        
+        onSnapshot(q, (querySnapshot) => {
+            let history = [];
+            let historyHTML = "";
+            let winCount = 0;
+            let loseCount = 0;
+            
+            let docsArray = [];
+            querySnapshot.forEach((doc) => {
+                docsArray.push(doc.data());
+            });
+
+            for (let i = 0; i < docsArray.length; i++) {
+                let currentItem = docsArray[i];
+                history.push(currentItem.result);
+                let displayNum = currentItem.number !== "N/A" ? ` [ဂဏန်း: ${currentItem.number}]` : "";
+                historyHTML += `<div class="history-item"><span>• ${currentItem.result}</span><span style="color:#94a3b8">${displayNum}</span></div>`;
+            }
+
+            if (history.length >= 2) {
+                for (let j = 0; j < history.length - 1; j++) {
+                    let predictedNext = history[j + 1] === 'BIG' ? 'SMALL' : 'BIG';
+                    if (predictedNext === history[j]) {
+                        winCount++;
+                    } else {
+                        loseCount++;
+                    }
+                }
+            }
+
+            let totalGames = winCount + loseCount;
+            let winRate = totalGames > 0 ? Math.round((winCount / totalGames) * 100) : 0;
+
+            document.getElementById('winCountDisplay').innerText = winCount;
+            document.getElementById('loseCountDisplay').innerText = loseCount;
+            document.getElementById('winRateDisplay').innerText = winRate + "%";
+
+            document.getElementById('historyList').innerHTML = historyHTML || "ဒေတာ မရှိသေးပါ";
+
+            if (history.length >= 3) {
+                let bigCount = history.filter(item => item === 'BIG').length;
+                let smallCount = history.filter(item => item === 'SMALL').length;
+                let total = history.length;
+
+                let prediction = "";
+                let reason = "";
+                let accuracy = 50;
+
+                if (history[0] === history[1] && history[1] === history[2]) {
+                    prediction = history[0] === 'BIG' ? 'SMALL' : 'BIG';
+                    reason = `ဆက်တိုက် '${history[0]}' ကျထားသဖြင့် ပြောင်းပြန်ကျရန် မျှော်လင့်ရသည်။`;
+                    accuracy = 78;
+                } else {
+                    prediction = bigCount >= smallCount ? 'BIG' : 'SMALL';
+                    let dominantCount = prediction === 'BIG' ? bigCount : smallCount;
+                    accuracy = Math.min(60 + Math.round((dominantCount / total) * 25), 92);
+                    reason = `နောက်ဆုံးမှတ်တမ်းများအရ '${prediction}' ၏ ရေပန်းစားမှု ပိုများနေပါသည်။`;
+                }
+
+                document.getElementById('predictionDisplay').innerText = prediction;
+                document.getElementById('predictionDisplay').style.color = prediction === 'BIG' ? '#f59e0b' : '#3b82f6';
+                document.getElementById('predictionReason').innerText = reason;
+
+                document.getElementById('accuracyText').innerText = accuracy + "%";
+                document.getElementById('accuracyBar').style.width = accuracy + "%";
+            } else {
+                document.getElementById('predictionDisplay').innerText = "--";
+                document.getElementById('predictionReason').innerText = "ဒေတာ အနည်းဆုံး ၃ ခု လိုအပ်ပါသည်။";
+                document.getElementById('accuracyText').innerText = "--%";
+                document.getElementById('accuracyBar').style.width = "0%";
+            }
+        });
+    </script>
+
+    <!-- Draggable Floating Window Script -->
+    <script>
+        const floatingWindow = document.getElementById('floatingWindow');
+        const windowHeader = document.getElementById('windowHeader');
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        windowHeader.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            offsetX = e.clientX - floatingWindow.offsetLeft;
+            offsetY = e.clientY - floatingWindow.offsetTop;
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        windowHeader.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            const touch = e.touches[0];
+            offsetX = touch.clientX - floatingWindow.offsetLeft;
+            offsetY = touch.clientY - floatingWindow.offsetTop;
+            document.addEventListener('touchmove', onTouchMove);
+            document.addEventListener('touchend', onTouchEnd);
+        });
+
+        function onMouseMove(e) {
+            if (!isDragging) return;
+            floatingWindow.style.left = (e.clientX - offsetX) + 'px';
+            floatingWindow.style.top = (e.clientY - offsetY) + 'px';
+            floatingWindow.style.right = 'auto';
+        }
+
+        function onMouseUp() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+
+        function onTouchMove(e) {
+            if (!isDragging) return;
+            const touch = e.touches[0];
+            floatingWindow.style.left = (touch.clientX - offsetX) + 'px';
+            floatingWindow.style.top = (touch.clientY - offsetY) + 'px';
+            floatingWindow.style.right = 'auto';
+        }
+
+        function onTouchEnd() {
+            isDragging = false;
+            document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('touchend', onTouchEnd);
+        }
+
+        function toggleMinimize() {
+            floatingWindow.classList.toggle('minimized');
+            const btn = document.getElementById('minBtn');
+            btn.innerText = floatingWindow.classList.contains('minimized') ? '+' : '-';
+        }
+    </script>
+</body>
+</html>
